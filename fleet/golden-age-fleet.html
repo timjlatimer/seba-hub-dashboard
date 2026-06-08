@@ -1,0 +1,31 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Golden Age Fleet</title>
+<style>
+ body{margin:0;background:#070b10;color:#e9eef4;font-family:"Segoe UI",system-ui,Arial,sans-serif;padding:18px;width:1180px}
+ h1{margin:0 0 2px;font-size:22px}h1 b{color:#e8b54d}
+ .sub{color:#8aa0b4;font-size:13px;margin-bottom:16px}
+ .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+ .card{background:#0f1620;border:1px solid #20303f;border-radius:8px;overflow:hidden}
+ .card img{width:100%;display:block}
+ .cap{font-size:10.5px;color:#cdd8e2;padding:5px 7px;text-align:center}
+</style></head><body>
+ <h1>The Golden Age Fleet — <b>your routing library</b></h1>
+ <div class="sub">10 historical trust archetypes the Intent Harvesting Engine routes to. Each card carries its playbook, golden kernel, <span style="color:#e0556b">shadow side / abuses</span>, the consumer protection it triggered, and the existential risk if AI gets it wrong — the conscience layer.</div>
+ <div class="grid" id="g"></div>
+<script>
+const cards=[
+ ["01-fuller-brush-man.png","Fuller Brush — give first"],
+ ["02-avon-lady.png","Avon Lady — neighbor trust"],
+ ["03-route-man.png","Route Man — be there at the moment of need"],
+ ["04-tupperware-hostess.png","Tupperware — community proof"],
+ ["05-kirby-demonstrator.png","Kirby — proof / demonstration"],
+ ["06-electrolux-advisor.png","Electrolux — professional calm"],
+ ["07-family-future-counselor.png","Family Future — protect tomorrow"],
+ ["08-southwestern-scout.png","Southwestern — territory math"],
+ ["09-mary-kay-mentor.png","Mary Kay — recognition & dignity"],
+ ["10-network-builder.png","Network Builder — law of 250"]
+];
+const g=document.getElementById('g');
+cards.forEach(([f,c])=>{const d=document.createElement('div');d.className='card';
+ d.innerHTML='<img src="golden-age/'+f+'"><div class="cap">'+c+'</div>';g.appendChild(d);});
+</script>
+</body></html>

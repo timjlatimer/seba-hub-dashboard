@@ -1,0 +1,88 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Cache-Control" content="no-store">
+<title>Seba Hub — Nightly Occupancy Console</title>
+<style>
+ :root{--bg:#070b10;--ink:#e9eef4;--muted:#8aa0b4;--gold:#e8b54d;--teal:#36c2b4;--cyan:#51a7f9;--green:#46c66d;--yellow:#e8c24d;--red:#e0556b}
+ *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,Arial,sans-serif;padding:16px;width:1080px}
+ h1{margin:0;font-size:20px}h1 b{color:var(--gold)}
+ .sub{color:var(--muted);font-size:12.5px;margin:3px 0 6px}
+ .guard{display:inline-block;background:#161002;border:1px solid #5a4a12;color:var(--gold);font-size:11.5px;padding:4px 9px;border-radius:6px;margin-bottom:12px}
+ .board{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+ .pill{font-size:11px;padding:4px 9px;border-radius:20px;background:#0f1620;border:1px solid #20303f;color:var(--muted)}
+ .pill b{color:var(--ink)}
+ .sig{background:#0f1620;border:1px solid #20303f;border-radius:10px;padding:13px 15px;margin-bottom:11px}
+ .row1{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+ .raw{font-size:14px;color:#fff;font-weight:600;line-height:1.4}
+ .src{color:var(--muted);font-size:11px;margin-top:3px}
+ .chips{display:flex;gap:6px;flex-wrap:wrap;margin:9px 0}
+ .chip{font-size:10.5px;padding:3px 8px;border-radius:6px;background:#0a1018;border:1px solid #20303f;color:#cdd8e2}
+ .chip.intent{border-color:#2c6cb0;color:#9cc6f5}
+ .chip.conf{border-color:#2f7d52;color:#7fdca0}
+ .chip.urg-high{border-color:#7d3a44;color:#f0a3ae}.chip.urg-medium{border-color:#7d6a2f;color:#e8d18a}.chip.urg-low{border-color:#33424f;color:#9fb2c2}
+ .chip.creep-high{border-color:#7d3a44;color:#f0a3ae}.chip.creep-medium{border-color:#7d6a2f;color:#e8d18a}.chip.creep-low{border-color:#2f7d52;color:#7fdca0}
+ .agent{color:var(--gold);font-weight:600;font-size:12.5px;margin-top:2px}
+ .sizzle{color:var(--teal);font-size:11.5px;margin:5px 0}
+ .move{font-size:11.5px;color:#cdd8e2;background:#0a1018;border-left:2px solid var(--cyan);padding:5px 9px;border-radius:0 6px 6px 0;margin:6px 0}
+ .drafts{margin-top:8px;border-top:1px dashed #20303f;padding-top:8px}
+ .draft{display:flex;gap:9px;font-size:11.5px;margin:5px 0;line-height:1.4}
+ .dstyle{flex:0 0 130px;color:var(--muted);font-weight:600}
+ .dtext{color:#dbe6f0}
+ .actions{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+ button{font:inherit;font-size:11px;border-radius:6px;padding:5px 11px;border:1px solid #2a3a49;background:#0f1820;color:#cdd8e2;cursor:pointer}
+ button.approve{border-color:#2f7d52;color:#7fdca0}button.public{border-color:#5a4a12;color:var(--gold)}button.no{border-color:#7d3a44;color:#f0a3ae}
+ .status{font-size:11px;font-weight:700;padding:3px 9px;border-radius:6px;align-self:flex-start}
+ .st-Approved{background:#0e2418;color:#7fdca0;border:1px solid #2f7d52}
+ .st-Public{background:#241c02;color:var(--gold);border:1px solid #5a4a12}
+ .st-Watch{background:#0a1018;color:#9fb2c2;border:1px solid #33424f}
+ .st-pending{background:#0a1018;color:var(--muted);border:1px solid #20303f}
+</style></head><body>
+ <h1>Seba Hub — <b>Nightly Occupancy Console</b></h1>
+ <div class="sub" id="lane"></div>
+ <div class="guard">🔒 Draft-only flight simulator — nothing sends. The human approves every move.</div>
+ <div class="board" id="board"></div>
+ <div id="list"></div>
+<script>
+const KEY='seba-nightly-status';
+const store=JSON.parse(localStorage.getItem(KEY)||'{}');
+function save(){localStorage.setItem(KEY,JSON.stringify(store));}
+function setStatus(id,s){store[id]=s;save();render();}
+let DATA=null;
+fetch('signals.json?t='+Date.now()).then(r=>r.json()).then(d=>{DATA=d;render();});
+function render(){
+ document.getElementById('lane').innerHTML=DATA.lane+' — '+DATA.target+'<div style="margin-top:5px;color:#7d8a98;font-size:11px"><b style="color:#cdd8e2">Channel gate:</b> '+(DATA.channel_gate||'')+'</div>';
+ const counts={Approved:0,Public:0,Watch:0,pending:0};
+ DATA.signals.forEach(s=>{counts[store[s.id]||'pending']++;});
+ document.getElementById('board').innerHTML=
+   '<span class="pill"><b>'+DATA.signals.length+'</b> signals</span>'+
+   '<span class="pill">✅ Approved <b>'+counts.Approved+'</b></span>'+
+   '<span class="pill">📣 Public content <b>'+counts.Public+'</b></span>'+
+   '<span class="pill">👁 Watch / no-contact <b>'+counts.Watch+'</b></span>'+
+   '<span class="pill">⏳ Pending <b>'+counts.pending+'</b></span>';
+ const ordered=DATA.signals.slice().sort((a,b)=>((b.class==='organizer'?1:0)-(a.class==='organizer'?1:0)));
+ document.getElementById('list').innerHTML=ordered.map(s=>{
+  const st=store[s.id]||'pending';
+  const cls=s.class||'individual';
+  const ch=s.channel||'green_public_declared';
+  const clsBadge=cls==='organizer'
+    ?'<span style="font-size:10px;font-weight:700;color:#e8b54d;border:1px solid #5a4a12;border-radius:5px;padding:2px 7px">★ ORGANIZER · fills 10–50 beds</span>'
+    :'<span style="font-size:10px;color:#8aa0b4;border:1px solid #20303f;border-radius:5px;padding:2px 7px">individual</span>';
+  const chColor=ch.indexOf("green")===0?"#46c66d":(ch.indexOf("amber")===0?"#e8c24d":"#e0556b");
+  const chBadge='<span style="font-size:10px;color:'+chColor+';border:1px solid #20303f;border-radius:5px;padding:2px 7px">'+ch+'</span>';
+  return '<div class="sig"><div class="row1"><div><div style="margin-bottom:6px;display:flex;gap:6px;flex-wrap:wrap">'+clsBadge+chBadge+'</div><div class="raw">“'+s.raw+'”</div>'+
+   '<div class="src">'+s.source+'</div></div>'+
+   '<div class="status st-'+st+'">'+(st==='pending'?'⏳ pending':st)+'</div></div>'+
+   '<div class="chips"><span class="chip intent">'+s.intent+'</span>'+
+   '<span class="chip conf">confidence '+s.confidence+'%</span>'+
+   '<span class="chip urg-'+s.urgency+'">urgency: '+s.urgency+'</span>'+
+   '<span class="chip creep-'+s.creepiness+'">creepiness: '+s.creepiness+'</span></div>'+
+   '<div class="agent">→ route: '+s.agent+'</div>'+
+   '<div class="sizzle">sizzle: '+s.sizzle+'</div>'+
+   '<div class="move"><b>first move:</b> '+s.move+'</div>'+
+   '<div class="drafts">'+s.drafts.map(d=>'<div class="draft"><div class="dstyle">'+d.style+'</div><div class="dtext">'+d.text+'</div></div>').join('')+'</div>'+
+   '<div class="actions"><button class="approve" onclick="setStatus(\''+s.id+'\',\'Approved\')">Approve draft</button>'+
+   '<button class="public" onclick="setStatus(\''+s.id+'\',\'Public\')">Public content instead</button>'+
+   '<button class="no" onclick="setStatus(\''+s.id+'\',\'Watch\')">Watch / no-contact</button>'+
+   '<button onclick="setStatus(\''+s.id+'\',\'pending\')">reset</button></div></div>';
+ }).join('');
+}
+</script>
+</body></html>
